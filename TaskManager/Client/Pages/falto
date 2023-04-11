@@ -1,0 +1,10 @@
+nohup /opt/mssql/bin/sqlservr --accept-eula > /dev/null 2>&1 &
+wait $!
+pid=$!
+wait $pid
+
+/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Educative@123 -d master -Q "drop database TaskManager"
+
+
+/opt/mssql/bin/sqlservr --accept-eula > /root/sqlservr.out & tail -f /root/sqlservr.out | grep -q "SQL Server is now ready"
+apt-get remove dotnet-host
