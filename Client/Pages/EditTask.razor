@@ -1,0 +1,85 @@
+@page "/edittask/{id:int}"
+@using TaskManager.Shared;
+
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<h3>Edit Task</h3>
+
+@if (!ready)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <EditForm Model="TaskItem" OnValidSubmit="HandleValidSubmit">
+    
+
+        <div>
+            <label class="d-block">
+                Task Name
+                <InputTextArea @bind-Value="TaskItem.TaskName" class="form-control" />
+            </label>
+        </div>
+
+        <div class="pt-2 pb-2">
+            <button type="submit" class="btn btn-primary mr-auto">
+               Update
+            </button>
+        </div>
+
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+    </EditForm>
+
+    <div>@error</div>
+}
+
+@code {
+    [Parameter] public int id { get; set; }
+
+    private bool ready;
+    private string error;
+    @* private Expense expense; *@
+    private TaskItem? TaskItem;
+    @* private IList<ExpenseType> types; *@
+    @* private IList<TaskItem>? tasks = default!; *@
+
+    protected override async Task OnInitializedAsync()
+    {
+         
+        if (id == 0)
+        {
+            TaskItem = new TaskItem();
+        }
+        else
+        {
+            TaskItem = await Http.GetFromJsonAsync<TaskItem>($"TaskItems/{id}");
+        }
+        ready = true;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        HttpResponseMessage response;
+        if (TaskItem.TaskItemId == 0)
+        {
+            string requestUri = "TaskItems";
+            response = await Http.PostAsJsonAsync(requestUri,TaskItem);
+        }
+        else
+        {
+            string requestUri = $"TaskItems/{TaskItem.TaskItemId}";
+            response = await Http.PutAsJsonAsync(requestUri, TaskItem);
+        };
+
+        if (response.IsSuccessStatusCode)
+        {
+            Nav.NavigateTo("/");
+        }
+        else
+        {
+            error = response.ReasonPhrase;
+        };
+    }
+}
